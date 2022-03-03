@@ -1,21 +1,14 @@
-import datetime, sys, requests, random, os, openai
-from requests.structures import CaseInsensitiveDict
+import datetime, sys, random, os, openai, json
+from requests_oauthlib import OAuth1Session
 from config import *
 
 def get_story():
-    openai.api_key = sys.argv[1]
-
-    topics = [
-        'Breakfast', 'Lunch', 'Dinner', 'Gardening', 
-        'Dating', 'Sake', 'Beach', 'Soccer', 
-        'Sushi', 'School', 'Smoking', 'Forests',
-        'Ramen', 'Japan', 'Ninjas', 'Fishing'
-    ]
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    topics = open('seeds/topics.txt', 'r').read().splitlines()
     choices = [ 
         { 'genre': 'Comedy', 'length': 'Two', 'max_tokens': 60 }, 
         { 'genre': 'Narrative', 'length': 'Four', 'max_tokens': 120 }
     ]
-
     topic = random.choice(topics)
     choice = random.choice(choices)
     choice_dir = 'prompts/{}/'.format(choice['genre'])
@@ -42,20 +35,40 @@ def get_story():
 
     return story
 
-def tweet_story(story):
-    twitter_api_key = sys.argv[2]
+def create_oath_session():
+    twitter_api_key = os.environ.get("TWITTER_API_KEY")
+    twitter_api_secret = os.environ.get("TWITTER_API_SECRET")
+    oauth_token = os.environ.get("OAUTH_TOKEN")
+    oauth_token_secret = os.environ.get("OAUTH_TOKEN_SECRET")
 
-    headers = CaseInsensitiveDict()
-    headers["Accept"] = "application/json"
-    headers["Authorization"] = f"Bearer {twitter_api_key}"
+    oauth = OAuth1Session(
+        twitter_api_key,
+        client_secret=twitter_api_secret,
+        resource_owner_key=oauth_token,
+        resource_owner_secret=oauth_token_secret,
+    )
 
-    print(twitter_api['tweets'])
-    print(headers['Authorization'])
-    # resp = requests.post(twitter_api['tweets'], headers=headers, data={ 'text': story })
-    # print('Twitter API response:\n')
-    # print(resp)
+    return oauth
+
+def tweet_story(oauth, story):
+    payload = { "text": story }
+
+    # Making the request
+    response = oauth.post(
+        "https://api.twitter.com/2/tweets",
+        json=payload,
+    )
+
+    if response.status_code != 201:
+        raise Exception("Request returned an error: {} {}".format(response.status_code, response.text))
+
+    print("Response code: {}".format(response.status_code))
+
+    # Saving the response as JSON
+    json_response = response.json()
+    print(json.dumps(json_response, indent=4, sort_keys=True))
 
 if __name__ == "__main__":
-    # story = get_story()
-    story = ''
-    tweet_story(story)
+    story = get_story()
+    oauth = create_oath_session()
+    tweet_story(oauth, story)
