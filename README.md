@@ -31,6 +31,8 @@ Finally, you will need to an OAuth token and a token secret. This is how you can
 - Enter that 6-digit code into the terminal and hit enter
 - Your OAuth token and token secret will be displayed on the terminal screen
 
+Your OAuth token and token secret should last you about 60 days. After that, you may need to regenerate them.
+
 ## Use
 
 For manual use, you will need to save the following API keys as environment variables on the machine you are running from:
@@ -84,3 +86,13 @@ The above schedule will run your job every day at midnight.
 Cronjobs are typically structured in this order:
 
 `minute hour day-of-month month day-of-week`
+
+## New Features
+
+### Lottery
+
+In order to enhance the automation of Twitter Story Time, a lottery was added for probablistic tweeting. This was done by introducing a new enviroment variable, `LOTTERY`, which can be set to an integer number.
+
+You can set `LOTTERY=N` where `1/N` is the chance of your tweet being sent out (winning the "lottery"). `LOTTERY` defaults to `1`, so if you do not override this env variable it will behave the same as before.
+
+However, let's say that you set `LOTTERY` to `4`. That will result in a quarter chance of your tweet being sent. So in the event that your automation is scheduled to run four times a day, your account will send (on average) a single tweet out daily.
