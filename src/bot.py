@@ -2,6 +2,10 @@ import datetime, sys, random, os, openai, json
 from requests_oauthlib import OAuth1Session
 from config import *
 
+def lottery():
+    raffle = [False, False, False, True, False, False, False, False] # 1/8 chance of winning
+    return random.choice(raffle)
+
 def get_story():
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     topics = open('seeds/topics.txt', 'r').read().splitlines()
@@ -25,6 +29,7 @@ def get_story():
         frequency_penalty=0.8,
         presence_penalty=0
     )
+
     resp = response['choices'][0]['text']
     prefix = 'Story time: ' if choice['length'] == 'Four' else ''
     story = '{}{}'.format(prefix, resp.strip()) 
@@ -69,6 +74,11 @@ def tweet_story(oauth, story):
     print(json.dumps(json_response, indent=4, sort_keys=True))
 
 if __name__ == "__main__":
-    story = get_story()
-    oauth = create_oath_session()
-    tweet_story(oauth, story)
+    is_lottery = os.getenv("LOTTERY", 'False').lower() in ('true', '1', 't')
+
+    if is_lottery and not lottery():
+        print('Lost raffle. Tweet won\'t be sent.')
+    else:
+        story = get_story()
+        oauth = create_oath_session()
+        tweet_story(oauth, story)
