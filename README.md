@@ -31,6 +31,8 @@ Finally, you will need to an OAuth token and a token secret. This is how you can
 - Enter that 6-digit code into the terminal and hit enter
 - Your OAuth token and token secret will be displayed on the terminal screen
 
+Your OAuth token and token secret should last you about 60 days. After that, you may need to regenerate them.
+
 ## Use
 
 For manual use, you will need to save the following API keys as environment variables on the machine you are running from:
